@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eva at 26 — Pick a Prompt!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --green: #0e4a2f;
+    --pink: #f472a0;
+    --pink-deep: #ec4f8a;
+    --cream: #f6efd9;
+    --green-deep: #0a3d26;
+  }
+  *{ box-sizing: border-box; }
+  html, body{
+    margin:0;
+    padding:0;
+    background: var(--green);
+    font-family: 'Nunito', sans-serif;
+    display:flex;
+    justify-content:center;
+  }
+
+  /* The poster image sets the intrinsic size. Everything else is
+     positioned in percentages of this container so it stays aligned
+     with the artwork at any scale. */
+  .poster{
+    position: relative;
+    width: 100%;
+    max-width: 700px;
+    line-height: 0; /* kill whitespace under the img */
+  }
+  .poster img{
+    display:block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* ---- Name input, sitting over the cream input area on the poster ---- */
+  .name-input{
+    position:absolute;
+    top: 51.9%;
+    left: 17.5%;
+    width: 65%;
+    height: 5.9%;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    color: #6b6350;
+    font-size: clamp(13px, 2.6vw, 20px);
+    padding: 0 2%;
+    transition: opacity 0.2s ease;
+  }
+  .name-input::placeholder{ color: transparent; }
+  .name-input:focus{ background: rgba(255,255,255,0.25); border-radius: 999px; }
+
+  /* ---- Draw My Prompt button, sitting over the pink pill on the poster ---- */
+  .draw-btn{
+    position:absolute;
+    top: 60.5%;
+    left: 27.2%;
+    width: 45.5%;
+    height: 6.2%;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    border-radius: 999px;
+    transition: opacity 0.2s ease;
+  }
+  .draw-btn:hover{ background: rgba(255,255,255,0.10); }
+  .draw-btn:focus-visible{ outline: 3px solid var(--cream); outline-offset: 3px; }
+  .draw-btn.hidden{ opacity:0; pointer-events:none; }
+
+  /* ---- Prompt reveal: fills the whole dashed box (label + input + button
+         area), covering those static elements, so the card reads as one
+         cohesive unit sized to match the dashed box ---- */
+  .prompt-reveal{
+    position: absolute;
+    top: 46.1%;
+    left: 12%;
+    width: 76%;
+    height: 23.2%;
+    z-index: 3;
+    background: var(--cream);
+    border-radius: 7%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap: 4%;
+    padding: 4% 6%;
+    text-align:center;
+    opacity:0;
+    transform: scale(0.92);
+    pointer-events:none;
+    transition: opacity 0.3s ease, transform 0.3s cubic-bezier(.2,1.4,.4,1);
+  }
+  .prompt-reveal.show{
+    opacity:1;
+    transform: scale(1);
+    pointer-events:auto;
+  }
+  .prompt-reveal .prompt-label{
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    font-size: clamp(10px, 2.2vw, 13px);
+    color: var(--pink-deep);
+    margin:0;
+  }
+  .prompt-reveal .prompt-text{
+    font-family:'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: clamp(18px, 3vw, 20px);
+    line-height: 1.28;
+    color: #4a4636;
+    margin: 0 10px 0.5em 0;
+  }
+  .prompt-reveal .next-person{
+    background: var(--pink);
+    color: var(--green-deep);
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    font-family:'Nunito', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    font-size: clamp(10px, 2.4vw, 15px);
+    padding: 2.6% 6%;
+    box-shadow: 0 4px 0 var(--pink-deep);
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+  }
+  .prompt-reveal .next-person:hover{ background:#f987ac; }
+  .prompt-reveal .next-person:active{ transform: translateY(3px); box-shadow: 0 1px 0 var(--pink-deep); }
+  .prompt-reveal .next-person:focus-visible{ outline: 3px solid var(--green-deep); outline-offset: 2px; }
+</style>
+</head>
+<body>
+
+<div class="poster">
+  <img src="IMG_2221.png" alt="Eva at 26 birthday photo prompt poster">
+
+  <input type="text" id="nameInput" class="name-input" placeholder="Type your name here" autocomplete="off">
+
+  <button type="button" id="drawBtn" class="draw-btn" aria-label="Draw my prompt"></button>
+
+  <div class="prompt-reveal" id="promptReveal">
+    <p class="prompt-label"><span id="nameDisplay"></span>'s PROMPT</p>
+    <p class="prompt-text" id="promptText"></p>
+    <button type="button" id="nextBtn" class="next-person">NEXT PERSON'S TURN -></button>
+  </div>
+</div>
+
+<script>
+  const prompts = [
+    "Best fake modeling pose",
+    "Show me your signature dance move",
+    "Make the ugliest pose possible plz",
+    "Give me a dramatic friendship hug",
+    "Pretend we're on a vogue cover",
+    "Make a heart together",
+    "Pose the same as your hinge profile pic",
+    "Recreate a meme together",
+    "Find a background that matches our outfits",
+    "Take a photo somewhere that feels very LA",
+    "Take a photo in motion",
+    "Take a photo from a weird angle",
+    "Find something yellow and pose with it 💛"
+  ];
+
+  const nameInput = document.getElementById('nameInput');
+  const drawBtn = document.getElementById('drawBtn');
+  const reveal = document.getElementById('promptReveal');
+  const promptText = document.getElementById('promptText');
+  const nextBtn = document.getElementById('nextBtn');
+
+  let usedIndices = [];
+  function pickPrompt(){
+    if (usedIndices.length >= prompts.length) usedIndices = [];
+    let i;
+    do { i = Math.floor(Math.random() * prompts.length); }
+    while (usedIndices.includes(i));
+    usedIndices.push(i);
+    return prompts[i];
+  }
+
+  const nameDisplay = document.getElementById('nameDisplay');
+
+  function drawForCurrentPerson(){
+    const name = nameInput.value.trim();
+    nameDisplay.textContent = name ? name.toUpperCase() : "YOUR";
+    promptText.textContent = pickPrompt();
+    drawBtn.classList.add('hidden');
+    nameInput.readOnly = true;
+    nameInput.style.opacity = '0';
+    reveal.classList.add('show');
+  }
+
+  function resetForNextPerson(){
+    nameInput.value = '';
+    nameInput.readOnly = false;
+    nameInput.style.opacity = '1';
+    reveal.classList.remove('show');
+    drawBtn.classList.remove('hidden');
+    nameInput.focus();
+  }
+
+  drawBtn.addEventListener('click', drawForCurrentPerson);
+  nextBtn.addEventListener('click', resetForNextPerson);
+  nameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !nameInput.readOnly) drawForCurrentPerson();
+  });
+</script>
+
+</body>
+</html>
